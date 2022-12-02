@@ -41,6 +41,7 @@ The cache folder is where all the inputs live, if you set up the `.env` file lik
     
 ```
 Day 1: Part 1 (70369) | Part 2 (203002) [1 milliseconds]
+Day 2: Part 1 (10595) | Part 2 (9541) [4 milliseconds]
 ```
   </p>
 </details>
@@ -50,8 +51,9 @@ Day 1: Part 1 (70369) | Part 2 (203002) [1 milliseconds]
   <p>
     
 ```
-       --------Part 1--------   --------Part 2--------
+      --------Part 1--------   --------Part 2--------
 Day       Time   Rank  Score       Time   Rank  Score
+  2   09:51:08  78291      0   09:58:38  72520      0
   1   09:49:05  69007      0   09:51:44  65189      0
 ```
   </p>
