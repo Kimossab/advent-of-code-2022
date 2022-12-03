@@ -3,11 +3,6 @@ import { getPuzzleInput } from "../getPuzzleInput";
 const a = "a".charCodeAt(0);
 const A = "A".charCodeAt(0);
 
-interface Rucksack {
-  compartment1: string[];
-  compartment2: string[];
-}
-
 const getPriority = (badge: string): number => {
   const code = badge.charCodeAt(0);
   if (code >= a) {
