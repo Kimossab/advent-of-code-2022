@@ -4,7 +4,7 @@ import { day3 } from "./day3";
 jest.mock("../getPuzzleInput");
 const mockGetPuzzleInput = getPuzzleInput as jest.Mock;
 
-describe("Day 2: Rock Paper Scissors ", () => {
+describe("Day 3: Rucksack Reorganization", () => {
   const input = `vJrwpWtwJgWrhcsFMMfFFhFp
 jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
 PmmdzqPrVvPwwTWBwg
