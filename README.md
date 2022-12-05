@@ -44,6 +44,7 @@ Day 1: Part 1 (70369) | Part 2 (203002) [1 milliseconds]
 Day 2: Part 1 (10595) | Part 2 (9541) [4 milliseconds]
 Day 3: Part 1 (7785) | Part 2 (2633) [2 milliseconds]
 Day 4: Part 1 (536) | Part 2 (845) [1 milliseconds]
+Day 5: Part 1 (SBPQRSCDF) | Part 2 (RGLVRCQSB) [2 milliseconds]
 ```
   </p>
 </details>
@@ -55,7 +56,8 @@ Day 4: Part 1 (536) | Part 2 (845) [1 milliseconds]
 ```
       --------Part 1--------   --------Part 2--------
 Day       Time   Rank  Score       Time   Rank  Score
-  4   10:28:07  68874      0   10:30 :47  66532      0
+  5   10:18:33  55209      0   10:22:13  52987      0
+  4   10:28:07  68874      0   10:30:47  66532      0
   3   09:26:06  62026      0   09:33:20  56062      0
   2   09:51:08  78291      0   09:58:38  72520      0
   1   09:49:05  69007      0   09:51:44  65189      0
