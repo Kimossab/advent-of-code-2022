@@ -53,10 +53,11 @@ Day 6: Part 1 (1155) | Part 2 (2789) [0 milliseconds]
 <details>
   <summary>My personal stats</summary>
   <p>
-    
+  
 ```
       --------Part 1--------   --------Part 2--------
 Day       Time   Rank  Score       Time   Rank  Score
+  7   11:35:50  42229      0   11:39:15  40055      0
   6   10:07:52  68493      0   10:11:01  67237      0
   5   10:18:33  55209      0   10:22:13  52987      0
   4   10:28:07  68874      0   10:30:47  66532      0
@@ -67,4 +68,4 @@ Day       Time   Rank  Score       Time   Rank  Score
   </p>
 </details>
 
-###### Disclaimer: I'm only writting this so the code page is not completely empty, this makes it more pleasing even if it's completely useless otherwise. ~~not like anyone is reading this anyway, but if you are have a nice day~~
+###### Disclaimer: I'm only writing this so the code page is not completely empty, this makes it more pleasing even if it's completely useless otherwise. ~~not like anyone is reading this anyway, but if you are have a nice day~~
