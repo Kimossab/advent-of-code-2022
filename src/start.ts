@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import { createInterface } from "readline/promises";
 dotenv.config();
-import { getDays, timeSince } from "./helpers";
+import { getDays } from "./helpers";
 
 const dayMap = getDays();
 
@@ -20,20 +20,16 @@ const solveProblem = async (day: number) => {
   }
 
   process.stdout.write(`Day ${day}: `);
-
-  const start = +new Date();
+  console.time(` `);
 
   const { part1, part2 } = await (
     dayModule[dName] as Exercise
   )();
 
-  const end = +new Date();
-
-  const humanTime = timeSince(start, end);
-
   process.stdout.write(
-    `Part 1 (${part1}) | Part 2 (${part2}) [${humanTime}]\n`
+    `Part 1 (${part1}) | Part 2 (${part2})`
   );
+  console.timeEnd(` `);
 };
 
 const main = async () => {
