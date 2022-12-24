@@ -23,11 +23,11 @@ describe("Day 23: Unstable Diffusion", () => {
     });
   });
   describe("Part 2", () => {
-    it("should return 301", async () => {
+    it("should return 20", async () => {
       mockGetPuzzleInput.mockResolvedValueOnce(input);
 
       await expect(day23()).resolves.toMatchObject({
-        part2: 301,
+        part2: 20,
       });
     });
   });
