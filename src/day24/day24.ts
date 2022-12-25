@@ -19,209 +19,206 @@ interface Area {
   maxY: number;
 }
 
-const moveBliz = {
-  [BlizzardDirection.Down]: [0, 1],
-  [BlizzardDirection.Right]: [1, 0],
-  [BlizzardDirection.Up]: [0, -1],
-  [BlizzardDirection.Left]: [-1, 0],
-};
+// I'm only using a class so I can reduce the amount of parameters in the finder
+class Solver {
+  private down = true;
+  private blizzards: Record<string, boolean> = {};
 
-const getBlizzardsPos = (
-  blizzards: Blizzard[],
-  area: Area,
-  time: number
-): Blizzard[] =>
-  blizzards.map((b) => {
-    let x = b.pos[0];
-    let y = b.pos[1];
+  constructor(
+    private area: Area,
+    private start: [number, number],
+    private end: [number, number]
+  ) {}
 
-    if (b.direction === BlizzardDirection.Right) {
-      const dist = time % area.maxX;
-      x += dist;
-      if (x > area.maxX) {
-        x = area.minX + x - area.maxX - 1;
+  private moveList = (x: number, y: number) => {
+    return (
+      this.down
+        ? [
+            [x + 1, y],
+            [x, y + 1],
+            [x, y - 1],
+            [x - 1, y],
+            [x, y],
+          ]
+        : [
+            [x - 1, y],
+            [x, y - 1],
+            [x, y + 1],
+            [x + 1, y],
+            [x, y],
+          ]
+    ) as [number, number][];
+  };
+
+  private isOutOfBounds = ([x, y]: [
+    number,
+    number
+  ]): boolean =>
+    (x !== this.end[0] || y !== this.end[1]) &&
+    (x !== this.start[0] || y !== this.start[1]) &&
+    (x < this.area.minX ||
+      x > this.area.maxX ||
+      y < this.area.minY ||
+      y > this.area.maxY);
+
+  private possibleMoves = (
+    time: number,
+    [x, y]: [number, number]
+  ): [number, number][] =>
+    this.moveList(x, y).filter((pos) => {
+      const hPosKey = `h${time % this.area.maxX},${
+        pos[0]
+      },${pos[1]}`;
+      const vPosKey = `v${time % this.area.maxY},${
+        pos[0]
+      },${pos[1]}`;
+
+      return (
+        !this.blizzards[vPosKey] &&
+        !this.blizzards[hPosKey] &&
+        !this.isOutOfBounds(pos)
+      );
+    });
+
+  findShortestPath = (
+    [x, y]: [number, number],
+    timeAdjustment = 0,
+    elapsedTime = 0,
+    best = { shortest: Infinity },
+    posVisited: Record<string, number> = {}
+  ): number => {
+    const idx = `${elapsedTime % this.area.maxX}|${
+      elapsedTime % this.area.maxY
+    }|${x},${y}`;
+
+    if (
+      !!posVisited[idx] &&
+      elapsedTime >= posVisited[idx]
+    ) {
+      return 0;
+    }
+    posVisited[idx] = elapsedTime;
+
+    if (elapsedTime >= best.shortest) {
+      return 0;
+    }
+
+    const hPosKey = `h${
+      (elapsedTime + timeAdjustment) % this.area.maxX
+    },${x},${y}`;
+    const vPosKey = `v${
+      (elapsedTime + timeAdjustment) % this.area.maxY
+    },${x},${y}`;
+    if (
+      this.blizzards[vPosKey] ||
+      this.blizzards[hPosKey]
+    ) {
+      return 0;
+    }
+    if (x === this.end[0] && y === this.end[1]) {
+      if (elapsedTime < best.shortest) {
+        best.shortest = elapsedTime;
       }
+      return elapsedTime;
     }
 
-    if (b.direction === BlizzardDirection.Left) {
-      const dist = time % area.maxX;
-      x -= dist;
-      if (x < area.minX) {
-        x = area.maxX - (area.minX - x) + 1;
-      }
-    }
-
-    if (b.direction === BlizzardDirection.Down) {
-      const dist = time % area.maxY;
-      y += dist;
-      if (y > area.maxY) {
-        y = area.minY + y - area.maxY - 1;
-      }
-    }
-
-    if (b.direction === BlizzardDirection.Up) {
-      const dist = time % area.maxY;
-      y -= dist;
-      if (y < area.minY) {
-        y = area.maxY - (area.minY - y) + 1;
-      }
-    }
-
-    return {
-      pos: [x, y],
-      direction: b.direction,
-    };
-  });
-
-const moveBlizzards = (
-  blizzards: Blizzard[],
-  area: Area
-): Blizzard[] =>
-  blizzards.map<Blizzard>((b) => {
-    const newPos: [number, number] = [
-      b.pos[0] + moveBliz[b.direction][0],
-      b.pos[1] + moveBliz[b.direction][1],
-    ];
-
-    if (newPos[0] > area.maxX) {
-      newPos[0] = area.minX;
-    } else if (newPos[0] < area.minX) {
-      newPos[0] = area.maxX;
-    }
-    if (newPos[1] > area.maxY) {
-      newPos[1] = area.minY;
-    } else if (newPos[1] < area.minY) {
-      newPos[1] = area.maxY;
-    }
-    return {
-      pos: newPos,
-      direction: b.direction,
-    };
-  });
-
-const isBlizzard = (
-  blizzards: Blizzard[],
-  [x, y]: [number, number]
-) =>
-  blizzards.some(
-    ({ pos: [bx, by] }) => bx === x && by === y
-  );
-
-const isOutOfBounds = (
-  [x, y]: [number, number],
-  [sx, sy]: [number, number],
-  [dx, dy]: [number, number],
-  area: Area
-): boolean =>
-  (x !== dx || y !== dy) &&
-  (x !== sx || y !== sy) &&
-  (x < area.minX ||
-    x > area.maxX ||
-    y < area.minY ||
-    y > area.maxY);
-
-const possibleMovesDown = (
-  blizzards: Blizzard[],
-  [x, y]: [number, number],
-  start: [number, number],
-  destination: [number, number],
-  area: Area
-): [number, number][] =>
-  (
-    [
-      [x + 1, y],
-      [x, y + 1],
-      [x, y - 1],
-      [x - 1, y],
-      [x, y],
-    ] as [number, number][]
-  ).filter(
-    (pos) =>
-      !isBlizzard(blizzards, pos) &&
-      !isOutOfBounds(pos, start, destination, area)
-  );
-
-const possibleMovesUp = (
-  blizzards: Blizzard[],
-  [x, y]: [number, number],
-  start: [number, number],
-  destination: [number, number],
-  area: Area
-): [number, number][] =>
-  (
-    [
-      [x - 1, y],
-      [x, y - 1],
-      [x, y + 1],
-      [x + 1, y],
-      [x, y],
-    ] as [number, number][]
-  ).filter(
-    (pos) =>
-      !isBlizzard(blizzards, pos) &&
-      !isOutOfBounds(pos, start, destination, area)
-  );
-
-const findShortestPath = (
-  blizzards: Blizzard[],
-  [x, y]: [number, number],
-  start: [number, number],
-  [dx, dy]: [number, number],
-  area: Area,
-  down = true,
-  elapsedTime = 0,
-  best = { shortest: Infinity },
-  posVisited: Record<string, number> = {}
-): number => {
-  const idx = `${elapsedTime % area.maxX}|${
-    elapsedTime % area.maxY
-  }|${x},${y}`;
-  if (!!posVisited[idx] && elapsedTime >= posVisited[idx]) {
-    return 0;
-  }
-  posVisited[idx] = elapsedTime;
-
-  if (elapsedTime >= best.shortest) {
-    return 0;
-  }
-  if (isBlizzard(blizzards, [x, y])) {
-    return 0;
-  }
-  if (x === dx && y === dy) {
-    return elapsedTime;
-  }
-
-  const newPositions = moveBlizzards(blizzards, area);
-
-  const possibilities = (
-    down ? possibleMovesDown : possibleMovesUp
-  )(newPositions, [x, y], start, [dx, dy], area);
-
-  for (const move of possibilities) {
-    const result = findShortestPath(
-      newPositions,
-      move,
-      start,
-      [dx, dy],
-      area,
-      down,
-      elapsedTime + 1,
-      best,
-      posVisited
+    const possibilities = this.possibleMoves(
+      elapsedTime + timeAdjustment + 1,
+      [x, y]
     );
 
-    if (result > 0 && result < best.shortest) {
-      best.shortest = result;
+    for (const move of possibilities) {
+      this.findShortestPath(
+        move,
+        timeAdjustment,
+        elapsedTime + 1,
+        best,
+        posVisited
+      );
     }
-  }
 
-  return best.shortest;
-};
+    return best.shortest;
+  };
+
+  getAllBlizzardPositionsOverTime = (
+    bzData: Blizzard[]
+  ): Record<string, boolean> => {
+    const horizontal = bzData.filter(
+      ({ direction }) =>
+        direction === BlizzardDirection.Left ||
+        direction === BlizzardDirection.Right
+    );
+    const vertical = bzData.filter(
+      ({ direction }) =>
+        direction === BlizzardDirection.Up ||
+        direction === BlizzardDirection.Down
+    );
+
+    for (let i = 0; i < this.area.maxX; i++) {
+      for (const { pos, direction } of horizontal) {
+        let x = pos[0];
+        const y = pos[1];
+
+        if (direction === BlizzardDirection.Right) {
+          const dist = i % this.area.maxX;
+          x += dist;
+          if (x > this.area.maxX) {
+            x = this.area.minX + x - this.area.maxX - 1;
+          }
+        }
+
+        if (direction === BlizzardDirection.Left) {
+          const dist = i % this.area.maxX;
+          x -= dist;
+          if (x < this.area.minX) {
+            x = this.area.maxX - (this.area.minX - x) + 1;
+          }
+        }
+
+        const key = `h${i},${x},${y}`;
+        this.blizzards[key] = true;
+      }
+    }
+    for (let i = 0; i < this.area.maxY; i++) {
+      for (const { pos, direction } of vertical) {
+        const x = pos[0];
+        let y = pos[1];
+
+        if (direction === BlizzardDirection.Down) {
+          const dist = i % this.area.maxY;
+          y += dist;
+          if (y > this.area.maxY) {
+            y = this.area.minY + y - this.area.maxY - 1;
+          }
+        }
+
+        if (direction === BlizzardDirection.Up) {
+          const dist = i % this.area.maxY;
+          y -= dist;
+          if (y < this.area.minY) {
+            y = this.area.maxY - (this.area.minY - y) + 1;
+          }
+        }
+
+        const key = `v${i},${x},${y}`;
+        this.blizzards[key] = true;
+      }
+    }
+
+    return this.blizzards;
+  };
+
+  goBack = () => {
+    const s = this.start;
+    this.start = this.end;
+    this.end = s;
+    this.down = !this.down;
+  };
+}
 
 export const day24: Exercise = async () => {
   const input = (await getPuzzleInput(24)).split("\n");
   input.pop();
-  console.log("");
 
   const start = input[0].indexOf(".");
   const area: Area = {
@@ -245,31 +242,33 @@ export const day24: Exercise = async () => {
     }
   }
 
-  const part1 = findShortestPath(
-    blizzards,
-    [start, 0],
-    [start, 0],
-    [end, input.length - 1],
-    area
-  );
-  const backJourney = findShortestPath(
-    getBlizzardsPos(blizzards, area, part1),
-    [end, input.length - 1],
-    [end, input.length - 1],
-    [start, 0],
+  const solver = new Solver(
     area,
-    false
+    [start, 0],
+    [end, input.length - 1]
   );
+
+  solver.getAllBlizzardPositionsOverTime(blizzards);
+
+  const part1 = solver.findShortestPath([start, 0]);
+
+  solver.goBack();
+
+  const backJourney = solver.findShortestPath(
+    [end, input.length - 1],
+    part1
+  );
+
+  solver.goBack();
+
   const part2 =
-    findShortestPath(
-      getBlizzardsPos(blizzards, area, part1 + backJourney),
+    solver.findShortestPath(
       [start, 0],
-      [start, 0],
-      [end, input.length - 1],
-      area
+      part1 + backJourney
     ) +
     part1 +
     backJourney;
+
   return {
     part1,
     part2,
