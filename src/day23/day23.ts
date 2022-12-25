@@ -1,4 +1,5 @@
 // import { stdout } from "process";
+import { stdout } from "process";
 import { getPuzzleInput } from "../getPuzzleInput";
 
 enum Direction {
@@ -24,7 +25,7 @@ interface Area {
 
 const reduceArea = (
   acc: Area,
-  [x, y]: [number, number, typeof MOVE_ORDER]
+  [x, y]: [number, number]
 ): Area => {
   return {
     minX: Math.min(acc.minX, x),
@@ -35,58 +36,59 @@ const reduceArea = (
 };
 
 const getProposedMove = (
-  elves: [number, number, typeof MOVE_ORDER][],
-  [ex, ey, directions]: [number, number, typeof MOVE_ORDER]
+  elves: Record<string, [number, number]>,
+  [ex, ey]: [number, number]
 ): [number, number] | null => {
-  const surroundingElves = elves.filter(
-    ([x, y]) =>
-      x >= ex - 1 &&
-      x <= ex + 1 &&
-      y >= ey - 1 &&
-      y <= ey + 1
-  ).length;
+  const surroundingElves = [
+    `${ex - 1},${ey - 1}`,
+    `${ex},${ey - 1}`,
+    `${ex + 1},${ey - 1}`,
+    `${ex - 1},${ey}`,
+    `${ex},${ey}`,
+    `${ex + 1},${ey}`,
+    `${ex - 1},${ey + 1}`,
+    `${ex},${ey + 1}`,
+    `${ex + 1},${ey + 1}`,
+  ].filter((key) => elves[key]).length;
+
   if (surroundingElves === 1) {
     return null;
   }
 
-  for (const move of directions) {
+  for (const move of MOVE_ORDER) {
     switch (move) {
       case Direction.North:
         if (
-          elves.some(
-            ([x, y]) =>
-              y === ey - 1 && x >= ex - 1 && x <= ex + 1
-          )
+          elves[`${ex - 1},${ey - 1}`] ||
+          elves[`${ex},${ey - 1}`] ||
+          elves[`${ex + 1},${ey - 1}`]
         ) {
           break;
         }
         return [ex, ey - 1];
       case Direction.South:
         if (
-          elves.some(
-            ([x, y]) =>
-              y === ey + 1 && x >= ex - 1 && x <= ex + 1
-          )
+          elves[`${ex - 1},${ey + 1}`] ||
+          elves[`${ex},${ey + 1}`] ||
+          elves[`${ex + 1},${ey + 1}`]
         ) {
           break;
         }
         return [ex, ey + 1];
       case Direction.West:
         if (
-          elves.some(
-            ([x, y]) =>
-              x === ex - 1 && y >= ey - 1 && y <= ey + 1
-          )
+          elves[`${ex - 1},${ey - 1}`] ||
+          elves[`${ex - 1},${ey}`] ||
+          elves[`${ex - 1},${ey + 1}`]
         ) {
           break;
         }
         return [ex - 1, ey];
       case Direction.East:
         if (
-          elves.some(
-            ([x, y]) =>
-              x === ex + 1 && y >= ey - 1 && y <= ey + 1
-          )
+          elves[`${ex + 1},${ey - 1}`] ||
+          elves[`${ex + 1},${ey}`] ||
+          elves[`${ex + 1},${ey + 1}`]
         ) {
           break;
         }
@@ -97,91 +99,54 @@ const getProposedMove = (
   return null;
 };
 
-// const print = (
-//   elves: [number, number, typeof MOVE_ORDER][],
-//   reset = true
-// ) => {
-//   const { minX, minY, maxX, maxY } = elves.reduce<Area>(
-//     reduceArea,
-//     {
-//       minX: Infinity,
-//       maxX: -Infinity,
-//       minY: Infinity,
-//       maxY: -Infinity,
-//     }
-//   );
-
-//   for (let y = minY; y <= maxY; y++) {
-//     for (let x = minX; x <= maxX; x++) {
-//       if (
-//         elves.find((elf) => elf[0] === x && elf[1] === y)
-//       ) {
-//         stdout.write("#");
-//       } else {
-//         stdout.write(".");
-//       }
-//     }
-//     stdout.write("\n");
-//   }
-//   if (reset) stdout.moveCursor(0, -(maxY - minY) - 1);
-// };
-
 const doRound = (
-  elves: [number, number, typeof MOVE_ORDER][]
-): [number, number] => {
+  elves: Record<string, [number, number]>
+): number => {
   let moveCount = 0;
-  const proposals: Record<number, [number, number]> = {};
+  const proposals: Record<string, [number, number]> = {};
+  const proposalsRecord: Record<string, number> = {};
 
-  for (let idx = 0; idx < elves.length; idx++) {
-    const elf = elves[idx];
+  for (const key of Object.keys(elves)) {
+    const elf = elves[key];
     const proposal = getProposedMove(elves, elf);
-    elves[idx][2].push(elves[idx][2].shift()!);
     if (proposal !== null) {
-      proposals[idx] = proposal;
+      proposals[key] = proposal;
+      const pKey = `${proposal[0]},${proposal[1]}`;
+      proposalsRecord[pKey] = proposalsRecord[pKey]
+        ? proposalsRecord[pKey] + 1
+        : 1;
     }
   }
-
-  const proposalList = Object.values(proposals);
+  MOVE_ORDER.push(MOVE_ORDER.shift()!);
 
   for (const elf of Object.keys(proposals)) {
-    const elfNum = Number(elf);
-    if (
-      proposalList.filter(
-        ([x, y]) =>
-          x === proposals[elfNum][0] &&
-          y === proposals[elfNum][1]
-      ).length > 1
-    ) {
+    const pKey = `${proposals[elf][0]},${proposals[elf][1]}`;
+    if (proposalsRecord[pKey] > 1) {
       continue;
     }
 
     moveCount++;
-    elves[elfNum][0] = proposals[elfNum][0];
-    elves[elfNum][1] = proposals[elfNum][1];
+    delete elves[elf];
+    elves[`${proposals[elf][0]},${proposals[elf][1]}`] = [
+      proposals[elf][0],
+      proposals[elf][1],
+    ];
   }
 
-  const area = elves.reduce<Area>(reduceArea, {
-    minX: Infinity,
-    maxX: -Infinity,
-    minY: Infinity,
-    maxY: -Infinity,
-  });
-  return [
-    (area.maxX - area.minX + 1) *
-      (area.maxY - area.minY + 1),
-    moveCount,
-  ];
+  return moveCount;
 };
 
 export const day23: Exercise = async () => {
   const input = (await getPuzzleInput(23)).split("\n");
 
-  const elves: [number, number, typeof MOVE_ORDER][] = [];
+  const elves: Record<string, [number, number]> = {};
+  let elvesCount = 0;
 
   for (let y = 0; y < input.length; y++) {
     for (let x = 0; x < input[y].length; x++) {
       if (input[y].charAt(x) === "#") {
-        elves.push([x, y, [...MOVE_ORDER]]);
+        elves[`${x},${y}`] = [x, y];
+        elvesCount++;
       }
     }
   }
@@ -189,14 +154,26 @@ export const day23: Exercise = async () => {
   let part1 = 0;
   let i = 0;
   for (; i < 10; i++) {
-    [part1] = doRound(elves);
-    part1 -= elves.length;
+    doRound(elves);
+    const area = Object.values(elves).reduce<Area>(
+      reduceArea,
+      {
+        minX: Infinity,
+        maxX: -Infinity,
+        minY: Infinity,
+        maxY: -Infinity,
+      }
+    );
+    part1 =
+      (area.maxX - area.minX + 1) *
+        (area.maxY - area.minY + 1) -
+      elvesCount;
   }
 
   let moveCount = Infinity;
 
   while (moveCount > 0) {
-    [, moveCount] = doRound(elves);
+    moveCount = doRound(elves);
     i++;
   }
 
